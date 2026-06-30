@@ -1,0 +1,203 @@
+<style>
+  .search-btn {
+    background-color: #fe424d;
+    color: #ffff;
+    border-radius: 25px;
+    padding: 0 1rem;
+  }
+  .search-btn:hover {
+    background-color: #d93540;
+    color: #ffff;
+  }
+  .search-btn i {
+    display: inline;
+    margin: 0.5rem;
+  }
+  .search-inp {
+    border-radius: 25px;
+    padding: 0.5rem 1.5rem;
+  }
+
+  /* Dropdown */
+  .search-wrapper {
+    position: relative;
+  }
+  .search-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    z-index: 9999;
+    overflow: hidden;
+    min-width: 300px;
+    display: none;
+  }
+  .suggestion-list {
+    list-style: none;
+    margin: 0;
+    padding: 4px 0;
+  }
+  .suggestion-list .sug-label {
+    font-size: 11px;
+    color: #aaa;
+    padding: 6px 16px 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+  .suggestion-list li a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px;
+    text-decoration: none;
+    color: #333;
+    font-size: 14px;
+    transition: background 0.12s;
+  }
+  .suggestion-list li a:hover {
+    background: #f7f7f7;
+  }
+  .sug-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #fff0f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .sug-icon i {
+    color: #fe424d;
+    font-size: 11px;
+  }
+  .sug-meta {
+    margin-left: auto;
+    font-size: 12px;
+    color: #bbb;
+  }
+  .sug-empty {
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #bbb;
+    text-align: center;
+  }
+</style>
+
+<nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/"><i class="fa-regular fa-compass"></i></a>
+    <button
+      class="navbar-toggler btn-nav"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
+      aria-controls="navbarNav"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <div class="navbar-nav">
+        <a class="nav-link" href="/listings">Explore</a>
+      </div>
+
+      <!-- Search -->
+      <div class="navbar-nav ms-auto">
+        <form class="d-flex" role="search" action="/listings/search" method="GET" id="searchForm">
+          <div class="search-wrapper">
+            <input
+              class="form-control me-2 search-inp"
+              type="search"
+              name="q"
+              id="searchInput"
+              placeholder="Search destinations"
+              autocomplete="off"
+            />
+            <!-- Dropdown -->
+            <div class="search-dropdown" id="searchDropdown">
+              <ul class="suggestion-list" id="suggestionList"></ul>
+            </div>
+          </div>
+          <button class="btn search-btn" type="submit">
+            <i class="fa-solid fa-magnifying-glass"></i>Search
+          </button>
+        </form>
+      </div>
+
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link" href="/listings/new">Airbnb your home</a>
+        <% if(!currUser) { %>
+          <a class="nav-link" href="/signup"><b>Sign Up</b></a>
+          <a class="nav-link" href="/login"><b>Login</b></a>
+        <% } %>
+        <% if(currUser) { %>
+          <a class="nav-link" href="/logout"><b>Logout</b></a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<script>
+  const searchInput    = document.getElementById("searchInput");
+  const searchDropdown = document.getElementById("searchDropdown");
+  const suggestionList = document.getElementById("suggestionList");
+  let debounceTimer;
+
+  searchInput.addEventListener("focus", () => {
+    fetchSuggestions(searchInput.value.trim());
+  });
+
+  searchInput.addEventListener("input", () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      fetchSuggestions(searchInput.value.trim());
+    }, 250);
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest("#searchForm")) {
+      searchDropdown.style.display = "none";
+    }
+  });
+
+  async function fetchSuggestions(q) {
+    try {
+      const res  = await fetch(`/listings/suggestions?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      renderSuggestions(data, q);
+    } catch (err) {
+      console.error("Suggestions error:", err);
+    }
+  }
+
+  function renderSuggestions(listings, q) {
+    if (!listings.length) {
+      suggestionList.innerHTML = `<li class="sug-empty">No destinations found</li>`;
+      searchDropdown.style.display = "block";
+      return;
+    }
+
+    const label = q ? "Results" : "Popular destinations";
+
+    suggestionList.innerHTML =
+      `<li class="sug-label">${label}</li>` +
+      listings.map(l => `
+        <li>
+          <a href="/listings/search?q=${encodeURIComponent(l.location)}">
+            <span class="sug-icon"><i class="fa-solid fa-location-dot"></i></span>
+            <span>${l.location}, ${l.country}</span>
+            <span class="sug-meta">₹${(l.price * 83).toLocaleString("en-IN")}/mo</span>
+          </a>
+        </li>
+      `).join("");
+
+    searchDropdown.style.display = "block";
+  }
+</script>

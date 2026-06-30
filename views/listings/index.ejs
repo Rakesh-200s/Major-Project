@@ -1,0 +1,253 @@
+<% layout("/layouts/boilerplate") %>
+<style>
+  #filter-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  #filters {
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    flex: 1;
+    gap: 0;
+    padding-bottom: 0.5rem;
+    scrollbar-width: none;
+  }
+
+  #filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter {
+    text-align: center;
+    min-width: 70px;
+    padding: 0.5rem 1rem 0.4rem;
+    opacity: 0.6;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: opacity 0.2s, border-bottom 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .filter:hover { 
+    opacity: 1; 
+  }
+
+  .filter.active {
+    opacity: 1;
+    border-bottom: 2px solid #222;
+    font-weight: bold;
+  }
+
+  .filter i { 
+    font-size: 1.2rem;
+   }
+  .filter p { 
+    font-size: 0.75rem; 
+    margin: 0.3rem 0 0; 
+  }
+
+  .tax-toggle {
+    border: 1px solid #ccc;
+    border-radius: 1rem;
+    padding: 0.6rem 1rem;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    flex-shrink: 0;
+    background: white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+
+  .tax-toggle label {
+     font-size: 0.8rem; 
+     cursor: pointer;
+     }
+  .scroll-btn {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    transition: box-shadow 0.2s;
+  }
+
+  .scroll-btn:hover {
+     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+     }
+
+  @media (max-width: 768px) {
+    .scroll-btn { 
+      display: none;
+     }
+    .tax-toggle label {
+       display: none; 
+      } 
+    .filter { 
+      min-width: 60px; 
+      padding: 0.5rem 0.6rem 0.4rem;
+     }
+  }
+
+ 
+  .no-results {
+    text-align: center;
+    width: 100%;
+    padding: 3rem;
+    color: #888;
+    font-size: 1rem;
+  }
+
+  .tax-info { display: none; }
+</style>
+
+<div id="filter-wrapper">
+
+  <button class="scroll-btn" id="scroll-left">
+    <i class="fa-solid fa-chevron-left"></i>
+  </button>
+
+
+  <div id="filters">
+    <div class="filter active" data-filter="all">
+      <div><i class="fa-solid fa-border-all"></i></div>
+      <p>All</p>
+    </div>
+    <div class="filter" data-filter="trending">
+      <div><i class="fa-solid fa-fire"></i></div>
+      <p>Trending</p>
+    </div>
+    <div class="filter" data-filter="rooms">
+      <div><i class="fa-solid fa-bed"></i></div>
+      <p>Rooms</p>
+    </div>
+    <div class="filter" data-filter="beach">
+      <div><i class="fa-solid fa-umbrella-beach"></i></div>
+      <p>Beach</p>
+    </div>
+    <div class="filter" data-filter="city">
+      <div><i class="fa-solid fa-mountain-city"></i></div>
+      <p>Iconic Cities</p>
+    </div>
+    <div class="filter" data-filter="arctic">
+      <div><i class="fa-regular fa-snowflake"></i></div>
+      <p>Arctic</p>
+    </div>
+    <div class="filter" data-filter="pool">
+      <div><i class="fa-solid fa-person-swimming"></i></div>
+      <p>Amazing Pool</p>
+    </div>
+    <div class="filter" data-filter="castle">
+      <div><i class="fa-brands fa-fort-awesome"></i></div>
+      <p>Castle</p>
+    </div>
+    <div class="filter" data-filter="camping">
+      <div><i class="fa-solid fa-tents"></i></div>
+      <p>Camping</p>
+    </div>
+    <div class="filter" data-filter="farms">
+      <div><i class="fa-solid fa-seedling"></i></div>
+      <p>Farms</p>
+    </div>
+    <div class="filter" data-filter="mountain">
+      <div><i class="fa-solid fa-mountain"></i></div>
+      <p>Mountain</p>
+    </div>
+    <div class="filter" data-filter="domes">
+      <div><i class="fa-solid fa-igloo"></i></div>
+      <p>Domes</p>
+    </div>
+    <div class="filter" data-filter="boat">
+      <div><i class="fa-solid fa-ship"></i></div>
+      <p>Boat</p>
+    </div>
+  </div>
+
+
+  <button class="scroll-btn" id="scroll-right">
+    <i class="fa-solid fa-chevron-right"></i>
+  </button>
+
+
+ <div class="tax-toggle">
+<div class="form-check-reverse form-switch">
+  <input class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault">
+  <label class="form-check-label" for="switchCheckDefault">Display after total taxes</label>
+</div>
+</div>
+</div>
+
+<div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3" id="listings-row">
+  <% for(let listing of allListings) { %>
+    <a href="/listings/<%=listing._id%>" class="listing-links" data-category="<%= listing.category %>">
+      <div class="card col listing-card">
+        <img src="<%= listing.image.url %>" class="card-img-top" alt="listing img" style="height: 20rem;"/>
+        <div class="card-img-overlay"></div>
+        <div class="card-body">
+          <p class="card-text">
+            <b><%= listing.title %></b> <br>
+            &#8377;<%= listing.price.toLocaleString("en-IN") %> / Night
+            <i class="tax-info">&nbsp; &nbsp;+18% GST</i>
+          </p>
+        </div>
+      </div>
+    </a>
+  <% } %>
+  <p class="no-results" id="no-results" style="display:none;">No listings found for this category.</p>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+   
+    const filters = document.querySelectorAll('.filter');
+    const listings = document.querySelectorAll('#listings-row a[data-category]');
+    const noResults = document.getElementById('no-results');
+
+    filters.forEach(filter => {
+      filter.addEventListener('click', () => {
+        filters.forEach(f => f.classList.remove('active'));
+        filter.classList.add('active');
+
+        const selected = filter.dataset.filter;
+        let visible = 0;
+
+        listings.forEach(card => {
+          const match = selected === 'all' || card.dataset.category === selected;
+          card.style.display = match ? 'block' : 'none';
+          if (match) visible++;
+        });
+
+        noResults.style.display = visible === 0 ? 'block' : 'none';
+      });
+    });
+
+   
+    const filtersEl = document.getElementById('filters');
+    document.getElementById('scroll-left').addEventListener('click', () => {
+      filtersEl.scrollBy({ left: -200, behavior: 'smooth' });
+    });
+    document.getElementById('scroll-right').addEventListener('click', () => {
+      filtersEl.scrollBy({ left: 200, behavior: 'smooth' });
+    });
+
+
+   const taxSwitch = document.getElementById("switchCheckDefault");
+taxSwitch.addEventListener("change", () => {
+  const taxInfos = document.getElementsByClassName("tax-info");
+  for (let info of taxInfos) {
+    info.style.display = taxSwitch.checked ? "inline" : "none";
+  }
+});
+  });
+</script>
