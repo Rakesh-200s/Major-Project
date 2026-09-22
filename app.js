@@ -123,7 +123,9 @@ app.use((err,req,res,next)=>{
   // res.send(statusCode).send(message);
 });
 
+
+
 //Host
-app.listen(3000, () => {
-  console.log("server is listening to port 3000");
+app.listen(5000, () => {
+  console.log("server is listening to port 5000");
 });
